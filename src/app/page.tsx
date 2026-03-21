@@ -5,7 +5,7 @@ import { fetchLatestDomains } from "@/lib/fetchLatestDomains";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const domains = await fetchLatestDomains(100);
+  const domains = await fetchLatestDomains();
 
   return (
     <div className="min-h-screen bg-white">

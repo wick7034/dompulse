@@ -28,6 +28,8 @@ export async function GET(req: Request) {
     lengthMax: parseOptionalNumber(url.searchParams.get("length_max")),
     startsWith: url.searchParams.get("starts_with") || undefined,
     endsWith: url.searchParams.get("ends_with") || undefined,
+    offset: parseOptionalNumber(url.searchParams.get("offset")),
+    limit: parseOptionalNumber(url.searchParams.get("limit")),
   };
 
   const domains = await getFilteredDomains(filters);

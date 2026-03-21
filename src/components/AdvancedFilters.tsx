@@ -68,9 +68,9 @@ export default function AdvancedFilters({
   const canReset = useMemo(() => {
     const normalizedDraft = buildAdvancedFilters(draft);
     return (
-      JSON.stringify(normalizedDraft) !== JSON.stringify(advancedFilters)
+      JSON.stringify(normalizedDraft) !== JSON.stringify(DEFAULT_ADVANCED_FILTERS)
     );
-  }, [advancedFilters, draft]);
+  }, [draft]);
 
   function handleApply() {
     onApplyAdvancedFilters(buildAdvancedFilters(draft));

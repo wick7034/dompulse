@@ -12,6 +12,8 @@ export type DomainQueryFilters = {
   lengthMax?: number;
   startsWith?: string;
   endsWith?: string;
+  offset?: number;
+  limit?: number;
 };
 
 export async function getFilteredDomains(
@@ -22,8 +24,7 @@ export async function getFilteredDomains(
   let query = supabaseAdmin
     .from("domains")
     .select(SELECT_FIELDS)
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .order("created_at", { ascending: false });
 
   if (filters.tlds && filters.tlds.length > 0) {
     query = query.in("tld", filters.tlds);
@@ -52,6 +53,11 @@ export async function getFilteredDomains(
   if (filters.endsWith) {
     query = query.ilike("name", `%${filters.endsWith}`);
   }
+
+  // Apply offset and limit for pagination (default: 0 offset, 500 limit)
+  const offset = filters.offset || 0;
+  const limit = filters.limit || 500;
+  query = query.range(offset, offset + limit - 1);
 
   const { data, error } = await query;
   if (error) throw new Error(`Failed to fetch filtered domains: ${error.message}`);
