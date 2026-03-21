@@ -205,7 +205,7 @@ export default function DomainsExplorer({ initialDomains }: Props) {
         resultCount={sorted.length}
       />
 
-      <div className="mt-4 bg-white md:rounded-lg md:border md:border-zinc-200 md:shadow-sm">
+      <div className="mt-4 rounded-lg border border-zinc-200 bg-white shadow-sm">
         {isFetching ? (
           <div className="flex items-center justify-center px-4 py-16 text-sm text-zinc-600">
             Loading domains...
@@ -220,7 +220,7 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       </div>
 
       {sorted.length > 0 && canLoadMore && (
-        <div className="sticky bottom-0 mt-6 flex justify-center gap-3 bg-gradient-to-t from-white via-white to-transparent px-4 py-4 sm:mt-4 sm:py-2 sm:bg-none sm:from-transparent">
+        <div className="mt-4 flex justify-center">
           <button
             type="button"
             onClick={() => {
@@ -232,7 +232,7 @@ export default function DomainsExplorer({ initialDomains }: Props) {
                 Math.min(n + PAGE_SIZE, sorted.length)
               );
             }}
-            className="w-full sm:w-auto min-h-12 sm:h-10 rounded-lg sm:rounded-md border-2 border-indigo-600 bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:border-indigo-700 active:scale-95 sm:border sm:bg-white sm:text-indigo-700 sm:border-zinc-200 sm:hover:bg-zinc-50"
+            className="h-10 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50"
           >
             Load more
           </button>
