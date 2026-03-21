@@ -70,7 +70,7 @@ export default function DomainTable({ domains }: Props) {
     <div className="relative">
       {toast && (
         <div
-          className="absolute right-4 top-3 z-20 rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm font-medium text-zinc-700 shadow-sm"
+          className="fixed left-4 right-4 top-4 z-20 rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-md sm:absolute sm:right-4 sm:left-auto sm:top-3 sm:w-auto"
           role="status"
           aria-live="polite"
         >
@@ -78,7 +78,39 @@ export default function DomainTable({ domains }: Props) {
         </div>
       )}
 
-      <div className="overflow-auto max-h-[64vh]">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3 p-4">
+        {domains.map((d, idx) => (
+          <div
+            key={`${d.domain}-${idx}`}
+            className="rounded-lg border border-zinc-200 bg-white p-4 space-y-2"
+          >
+            <button
+              type="button"
+              onClick={() => handleCopy(d.domain)}
+              className="w-full text-left font-semibold text-indigo-700 hover:text-indigo-800 hover:underline transition-colors break-all text-sm sm:text-base"
+              title="Click to copy"
+            >
+              {d.domain}
+            </button>
+            <div className="flex flex-wrap gap-4 text-xs text-zinc-600">
+              <div>
+                <span className="font-semibold text-zinc-700">TLD:</span> {d.tld}
+              </div>
+              <div>
+                <span className="font-semibold text-zinc-700">Length:</span> {d.length}
+              </div>
+              <div>
+                <span className="font-semibold text-zinc-700">Date:</span>{" "}
+                {formatDate(d.created_at)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto max-h-[64vh]">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-white">
             <tr className="border-b border-zinc-200 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
