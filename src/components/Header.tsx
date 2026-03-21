@@ -21,7 +21,7 @@ export default function Header() {
 
       <div className="flex items-center">
         <span className="hidden rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 sm:inline">
-          Supabase-ready structure
+          test mvp
         </span>
       </div>
     </div>

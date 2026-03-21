@@ -26,6 +26,8 @@ export async function GET(req: Request) {
     noHyphens: url.searchParams.get("no_hyphens") === "1",
     lengthMin: parseOptionalNumber(url.searchParams.get("length_min")),
     lengthMax: parseOptionalNumber(url.searchParams.get("length_max")),
+    startsWith: url.searchParams.get("starts_with") || undefined,
+    endsWith: url.searchParams.get("ends_with") || undefined,
   };
 
   const domains = await getFilteredDomains(filters);

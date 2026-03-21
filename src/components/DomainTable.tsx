@@ -13,15 +13,6 @@ function formatDate(iso: string): string {
   });
 }
 
-function registrarLabel(urlOrLabel: string): string {
-  try {
-    const u = new URL(urlOrLabel);
-    return u.hostname.replace(/^www\./, "");
-  } catch {
-    return urlOrLabel;
-  }
-}
-
 async function copyToClipboard(text: string): Promise<void> {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
@@ -94,7 +85,6 @@ export default function DomainTable({ domains }: Props) {
               <th className="px-4 py-3">Domain Name</th>
               <th className="px-4 py-3">TLD</th>
               <th className="px-4 py-3">Length</th>
-              <th className="px-4 py-3">Registrar</th>
               <th className="px-4 py-3">Date</th>
             </tr>
           </thead>
@@ -116,16 +106,6 @@ export default function DomainTable({ domains }: Props) {
                 </td>
                 <td className="px-4 py-3 text-zinc-800">{d.tld}</td>
                 <td className="px-4 py-3 text-zinc-800">{d.length}</td>
-                <td className="px-4 py-3">
-                  <a
-                    href={d.registrar}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-indigo-700 transition-colors hover:text-indigo-800 hover:underline"
-                  >
-                    {registrarLabel(d.registrar)}
-                  </a>
-                </td>
                 <td className="px-4 py-3 text-zinc-700">
                   {formatDate(d.created_at)}
                 </td>

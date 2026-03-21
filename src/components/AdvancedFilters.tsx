@@ -17,17 +17,6 @@ type Props = {
   onApplyAdvancedFilters: (next: DomainAdvancedFilters) => void;
 };
 
-const NUMBERS_FILTERS: Array<{
-  key: NumbersFilterOption;
-  label: string;
-  description?: string;
-}> = [
-  { key: "any", label: "Any" },
-  { key: "no_numbers", label: "No numbers" },
-  { key: "only_numbers", label: "Only numbers" },
-  { key: "contains_numbers", label: "Contains numbers" },
-];
-
 function setTlds(
   current: string[],
   tld: string
@@ -62,6 +51,18 @@ export default function AdvancedFilters({
       const nextValue = prev.hyphenOption === option ? undefined : option;
       return { ...prev, hyphenOption: nextValue };
     });
+  }
+
+  const numbersValue = draft.numbersOption;
+  const numbersIncludeActive = numbersValue === "contains_numbers";
+  const numbersExcludeActive = numbersValue === "no_numbers";
+  const numbersOnlyActive = numbersValue === "only_numbers";
+
+  function setNumbersOption(option: NumbersFilterOption) {
+    setDraft((prev) => ({
+      ...prev,
+      numbersOption: option,
+    }));
   }
 
   const canReset = useMemo(() => {
@@ -192,26 +193,43 @@ export default function AdvancedFilters({
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   Numbers
                 </div>
-                <div className="flex flex-col gap-2">
-                  {NUMBERS_FILTERS.map((opt) => (
-                    <label
-                      key={opt.key}
-                      className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 transition-colors hover:bg-zinc-50"
-                    >
-                      <span className="font-medium">{opt.label}</span>
-                      <input
-                        type="radio"
-                        name="numbers-filter"
-                        checked={draft.numbersOption === opt.key}
-                        onChange={() =>
-                          setDraft((prev) => ({
-                            ...prev,
-                            numbersOption: opt.key,
-                          }))
-                        }
-                      />
-                    </label>
-                  ))}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNumbersOption("contains_numbers")}
+                    className={[
+                      "h-9 rounded-full border px-3 text-sm font-medium transition-colors",
+                      numbersIncludeActive
+                        ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                    ].join(" ")}
+                  >
+                    Include
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNumbersOption("no_numbers")}
+                    className={[
+                      "h-9 rounded-full border px-3 text-sm font-medium transition-colors",
+                      numbersExcludeActive
+                        ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                    ].join(" ")}
+                  >
+                    Exclude
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNumbersOption("only_numbers")}
+                    className={[
+                      "h-9 rounded-full border px-3 text-sm font-medium transition-colors",
+                      numbersOnlyActive
+                        ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                    ].join(" ")}
+                  >
+                    Only Numbers
+                  </button>
                 </div>
               </div>
 

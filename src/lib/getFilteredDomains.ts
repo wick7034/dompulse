@@ -10,6 +10,8 @@ export type DomainQueryFilters = {
   noHyphens?: boolean;
   lengthMin?: number;
   lengthMax?: number;
+  startsWith?: string;
+  endsWith?: string;
 };
 
 export async function getFilteredDomains(
@@ -41,6 +43,14 @@ export async function getFilteredDomains(
 
   if (filters.lengthMax !== undefined) {
     query = query.lte("length", filters.lengthMax);
+  }
+
+  if (filters.startsWith) {
+    query = query.ilike("name", `${filters.startsWith}%`);
+  }
+
+  if (filters.endsWith) {
+    query = query.ilike("name", `%${filters.endsWith}`);
   }
 
   const { data, error } = await query;

@@ -76,6 +76,8 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       noHyphens,
       lengthMin: effectiveMin,
       lengthMax: effectiveMax,
+      startsWith: advancedFilters.startsWith,
+      endsWith: advancedFilters.endsWith,
     };
   }, [activeQuickFilters, advancedFilters]);
 
@@ -94,6 +96,8 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       tlds: serverHandlesTlds ? [] : advancedFilters.tlds,
       lengthMin: serverHandlesLength ? undefined : advancedFilters.lengthMin,
       lengthMax: serverHandlesLength ? undefined : advancedFilters.lengthMax,
+      startsWith: undefined, // Handled by server
+      endsWith: undefined, // Handled by server
       // Only neutralize when the *advanced* filter is the one requesting it.
       // Otherwise we would lose conflicting advanced constraints.
       numbersOption:
@@ -128,6 +132,10 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       params.set("length_min", String(serverFilters.lengthMin));
     if (serverFilters.lengthMax !== undefined)
       params.set("length_max", String(serverFilters.lengthMax));
+    if (serverFilters.startsWith)
+      params.set("starts_with", serverFilters.startsWith);
+    if (serverFilters.endsWith)
+      params.set("ends_with", serverFilters.endsWith);
 
     const queryKey = params.toString();
     const isDefault =
@@ -215,11 +223,15 @@ export default function DomainsExplorer({ initialDomains }: Props) {
         <div className="mt-4 flex justify-center">
           <button
             type="button"
-            onClick={() =>
+            onClick={() => {
+              // Blur any focused input to prevent mobile keyboard from opening
+              if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+              }
               setVisibleCount((n) =>
                 Math.min(n + PAGE_SIZE, sorted.length)
-              )
-            }
+              );
+            }}
             className="h-10 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50"
           >
             Load more

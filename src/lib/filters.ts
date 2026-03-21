@@ -25,9 +25,9 @@ export type NumbersFilterOption =
 
 export type HyphenFilterOption = "include" | "exclude";
 
-export type TldOption = ".com" | ".ai" | ".xyz" | ".io";
+export type TldOption = ".com" | ".ai" | ".xyz" | ".io" | ".org" | ".app";
 
-export const AVAILABLE_TLDS: TldOption[] = [".com", ".ai", ".xyz", ".io"];
+export const AVAILABLE_TLDS: TldOption[] = [".com", ".ai", ".xyz", ".io", ".org", ".app"];
 
 export type SortBy = "length" | "alphabetical";
 
