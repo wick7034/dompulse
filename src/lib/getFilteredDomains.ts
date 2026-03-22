@@ -12,6 +12,8 @@ export type DomainQueryFilters = {
   lengthMax?: number;
   startsWith?: string;
   endsWith?: string;
+  includeKeywords?: string[];
+  excludeKeywords?: string[];
   offset?: number;
   limit?: number;
 };
@@ -52,6 +54,23 @@ export async function getFilteredDomains(
 
   if (filters.endsWith) {
     query = query.ilike("name", `%${filters.endsWith}`);
+  }
+
+  // Handle include keywords with OR logic (if any keyword is in the domain name, include it)
+  if (filters.includeKeywords && filters.includeKeywords.length > 0) {
+    // Build OR conditions for all include keywords
+    const orConditions = filters.includeKeywords
+      .map((kw) => `name.ilike.%${kw}%`)
+      .join(",");
+    query = query.or(orConditions);
+  }
+
+  // Handle exclude keywords with AND logic (if any keyword is in the domain name, exclude it)
+  if (filters.excludeKeywords && filters.excludeKeywords.length > 0) {
+    // For each exclude keyword, add a NOT condition
+    for (const kw of filters.excludeKeywords) {
+      query = query.not("name", "ilike", `%${kw}%`);
+    }
   }
 
   // Apply offset and limit for pagination (default: 0 offset, 500 limit)

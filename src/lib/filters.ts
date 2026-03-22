@@ -141,10 +141,6 @@ export function filterDomains(
   const hasQuickNoHyphens = quickFilters.includes("no_hyphens");
   const hasQuickShort = quickFilters.includes("short_domains");
 
-  const includeKeywords = advanced.includeKeywords;
-  const excludeKeywords = advanced.excludeKeywords;
-  const hasIncludeKeywords = includeKeywords.length > 0;
-  const hasExcludeKeywords = excludeKeywords.length > 0;
   const startsWith = advanced.startsWith;
   const endsWith = advanced.endsWith;
 
@@ -203,18 +199,6 @@ export function filterDomains(
       } else {
         if (d.has_hyphen) return false;
       }
-    }
-
-    if (hasIncludeKeywords) {
-      const matchesAny = includeKeywords.some((kw) => nameLower.includes(kw));
-      if (!matchesAny) return false;
-    }
-
-    if (hasExcludeKeywords) {
-      const matchesAnyExcluded = excludeKeywords.some((kw) =>
-        nameLower.includes(kw)
-      );
-      if (matchesAnyExcluded) return false;
     }
 
     if (startsWith && !nameLower.startsWith(startsWith)) return false;

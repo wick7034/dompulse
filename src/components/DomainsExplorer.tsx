@@ -79,6 +79,8 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       lengthMax: effectiveMax,
       startsWith: advancedFilters.startsWith,
       endsWith: advancedFilters.endsWith,
+      includeKeywords: advancedFilters.includeKeywords,
+      excludeKeywords: advancedFilters.excludeKeywords,
     };
   }, [activeQuickFilters, advancedFilters]);
 
@@ -99,6 +101,8 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       lengthMax: serverHandlesLength ? undefined : advancedFilters.lengthMax,
       startsWith: undefined, // Handled by server
       endsWith: undefined, // Handled by server
+      includeKeywords: [], // Handled by server
+      excludeKeywords: [], // Handled by server
       // Only neutralize when the *advanced* filter is the one requesting it.
       // Otherwise we would lose conflicting advanced constraints.
       numbersOption:
@@ -137,6 +141,18 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       params.set("starts_with", serverFilters.startsWith);
     if (serverFilters.endsWith)
       params.set("ends_with", serverFilters.endsWith);
+    if (
+      serverFilters.includeKeywords &&
+      serverFilters.includeKeywords.length > 0
+    ) {
+      params.set("include_keywords", serverFilters.includeKeywords.join(","));
+    }
+    if (
+      serverFilters.excludeKeywords &&
+      serverFilters.excludeKeywords.length > 0
+    ) {
+      params.set("exclude_keywords", serverFilters.excludeKeywords.join(","));
+    }
 
     const queryKey = params.toString();
     const isDefault =
@@ -227,8 +243,14 @@ export default function DomainsExplorer({ initialDomains }: Props) {
               <div className="flex justify-center border-t border-zinc-200 px-4 py-4">
                 <button
                   type="button"
-                  onClick={async () => {
+                  onMouseDown={(e) => {
                     // Blur any focused input to prevent mobile keyboard from opening
+                    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+                      document.activeElement.blur();
+                    }
+                  }}
+                  onClick={async () => {
+                    // Double-check blur on click as well
                     if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
                       document.activeElement.blur();
                     }
@@ -276,7 +298,7 @@ export default function DomainsExplorer({ initialDomains }: Props) {
                     setVisibleCount((n) => Math.min(n + PAGE_SIZE, sorted.length));
                   }}
                   disabled={isFetching}
-                  className="h-10 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="select-none h-10 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isFetching ? "Loading..." : "Load more"}
                 </button>

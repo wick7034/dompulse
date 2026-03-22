@@ -28,6 +28,8 @@ export async function GET(req: Request) {
     lengthMax: parseOptionalNumber(url.searchParams.get("length_max")),
     startsWith: url.searchParams.get("starts_with") || undefined,
     endsWith: url.searchParams.get("ends_with") || undefined,
+    includeKeywords: parseCsv(url.searchParams.get("include_keywords")),
+    excludeKeywords: parseCsv(url.searchParams.get("exclude_keywords")),
     offset: parseOptionalNumber(url.searchParams.get("offset")),
     limit: parseOptionalNumber(url.searchParams.get("limit")),
   };
