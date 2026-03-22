@@ -78,7 +78,8 @@ export default function DomainTable({ domains }: Props) {
         </div>
       )}
 
-      <div className="overflow-auto max-h-[64vh]">
+      {/* Desktop View */}
+      <div className="hidden overflow-auto md:block max-h-[64vh]">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-white">
             <tr className="border-b border-zinc-200 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -113,6 +114,27 @@ export default function DomainTable({ domains }: Props) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden space-y-2 p-4">
+        {domains.map((d, idx) => (
+          <button
+            key={`${d.domain}-${idx}`}
+            type="button"
+            onClick={() => handleCopy(d.domain)}
+            className="w-full text-left p-3 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 transition-colors"
+          >
+            <div className="font-medium text-indigo-700 break-all text-sm">
+              {d.domain}
+            </div>
+            <div className="mt-1 flex gap-4 text-xs text-zinc-600">
+              <span>{d.tld}</span>
+              <span>{d.length} chars</span>
+              <span>{formatDate(d.created_at)}</span>
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );

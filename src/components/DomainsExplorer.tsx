@@ -306,25 +306,40 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       </div>
 
       {sorted.length > 0 && (
-        <div className="mt-4 flex flex-col items-center justify-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="mt-4 flex flex-col items-center justify-center gap-4 pointer-events-auto" onClickCapture={() => {
+          const el = document.activeElement as HTMLElement;
+          if (el && el.tagName !== 'BUTTON') {
+            el.blur?.();
+          }
+        }}>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
             <button
               type="button"
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.activeElement as HTMLElement;
+                el?.blur();
+                setCurrentPage((p) => Math.max(p - 1, 1));
+              }}
               disabled={currentPage === 1 || isFetching}
               className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-wrap justify-center">
               {totalPages <= 7 ? (
                 // Show all pages if 7 or fewer
                 Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (page) => (
                     <button
                       key={page}
-                      onClick={() => setCurrentPage(page)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const el = document.activeElement as HTMLElement;
+                        el?.blur();
+                        setCurrentPage(page);
+                      }}
                       className={`h-10 w-10 rounded-md text-sm font-medium transition-colors ${
                         currentPage === page
                           ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
@@ -341,7 +356,12 @@ export default function DomainsExplorer({ initialDomains }: Props) {
                   {currentPage > 3 && (
                     <>
                       <button
-                        onClick={() => setCurrentPage(1)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const el = document.activeElement as HTMLElement;
+                          el?.blur();
+                          setCurrentPage(1);
+                        }}
                         className="h-10 w-10 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
                       >
                         1
@@ -360,7 +380,12 @@ export default function DomainsExplorer({ initialDomains }: Props) {
                     .map((page) => (
                       <button
                         key={page}
-                        onClick={() => setCurrentPage(page)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const el = document.activeElement as HTMLElement;
+                          el?.blur();
+                          setCurrentPage(page);
+                        }}
                         className={`h-10 w-10 rounded-md text-sm font-medium transition-colors ${
                           currentPage === page
                             ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
@@ -377,7 +402,12 @@ export default function DomainsExplorer({ initialDomains }: Props) {
                         <span className="px-2 text-zinc-600">...</span>
                       )}
                       <button
-                        onClick={() => setCurrentPage(totalPages)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const el = document.activeElement as HTMLElement;
+                          el?.blur();
+                          setCurrentPage(totalPages);
+                        }}
                         className="h-10 w-10 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
                       >
                         {totalPages}
@@ -390,7 +420,12 @@ export default function DomainsExplorer({ initialDomains }: Props) {
 
             <button
               type="button"
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.activeElement as HTMLElement;
+                el?.blur();
+                setCurrentPage((p) => Math.min(p + 1, totalPages));
+              }}
               disabled={currentPage === totalPages || isFetching}
               className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
