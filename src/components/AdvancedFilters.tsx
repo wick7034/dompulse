@@ -32,7 +32,7 @@ export default function AdvancedFilters({
   advancedFilters,
   onApplyAdvancedFilters,
 }: Props) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<AdvancedFiltersFormValues>(() =>
     advancedFiltersToForm(advancedFilters)
   );
