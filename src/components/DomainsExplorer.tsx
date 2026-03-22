@@ -243,16 +243,22 @@ export default function DomainsExplorer({ initialDomains }: Props) {
               <div className="flex justify-center border-t border-zinc-200 px-4 py-4">
                 <button
                   type="button"
-                  onMouseDown={(e) => {
+                  onTouchStart={(e) => {
+                    e.preventDefault();
                     // Blur any focused input to prevent mobile keyboard from opening
-                    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
-                      document.activeElement.blur();
+                    const activeElement = document.activeElement as HTMLElement;
+                    if (activeElement && "blur" in activeElement) {
+                      activeElement.blur();
                     }
                   }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                  }}
                   onClick={async () => {
-                    // Double-check blur on click as well
-                    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
-                      document.activeElement.blur();
+                    // Blur any focused input
+                    const activeElement = document.activeElement as HTMLElement;
+                    if (activeElement && "blur" in activeElement) {
+                      activeElement.blur();
                     }
                     
                     // Check if we need to fetch more from server
