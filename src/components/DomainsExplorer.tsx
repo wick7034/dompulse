@@ -27,12 +27,12 @@ export default function DomainsExplorer({ initialDomains }: Props) {
   const [advancedFilters, setAdvancedFilters] =
     useState<DomainAdvancedFilters>(DEFAULT_ADVANCED_FILTERS);
   const [sortBy, setSortBy] = useState<SortBy>("length");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [loadMoreOffset, setLoadMoreOffset] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [serverDomains, setServerDomains] = useState<Domain[]>(initialDomains);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [loadedAllDomains, setLoadedAllDomains] = useState(false);
   const debounceTimerRef = useRef<number | null>(null);
 
   const serverFilters: DomainQueryFilters = useMemo(() => {
@@ -122,8 +122,75 @@ export default function DomainsExplorer({ initialDomains }: Props) {
     return sortDomains(clientRemainder, sortBy);
   }, [clientRemainder, sortBy]);
 
-  const visibleDomains = sorted.slice(0, visibleCount);
-  const canLoadMore = visibleCount < sorted.length;
+  // Pagination logic
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const visibleDomains = sorted.slice(startIndex, endIndex);
+
+  // Function to fetch more domains from server
+  const fetchMoreDomains = async () => {
+    if (loadedAllDomains || isFetching) return;
+
+    setIsFetching(true);
+    try {
+      const params = new URLSearchParams();
+      if (serverFilters.tlds && serverFilters.tlds.length > 0) {
+        params.set("tlds", serverFilters.tlds.join(","));
+      }
+      if (serverFilters.noNumbers) params.set("no_numbers", "1");
+      if (serverFilters.noHyphens) params.set("no_hyphens", "1");
+      if (serverFilters.lengthMin !== undefined)
+        params.set("length_min", String(serverFilters.lengthMin));
+      if (serverFilters.lengthMax !== undefined)
+        params.set("length_max", String(serverFilters.lengthMax));
+      if (serverFilters.startsWith)
+        params.set("starts_with", serverFilters.startsWith);
+      if (serverFilters.endsWith)
+        params.set("ends_with", serverFilters.endsWith);
+      if (
+        serverFilters.includeKeywords &&
+        serverFilters.includeKeywords.length > 0
+      ) {
+        params.set("include_keywords", serverFilters.includeKeywords.join(","));
+      }
+      if (
+        serverFilters.excludeKeywords &&
+        serverFilters.excludeKeywords.length > 0
+      ) {
+        params.set("exclude_keywords", serverFilters.excludeKeywords.join(","));
+      }
+
+      params.set("offset", String(serverDomains.length));
+      params.set("limit", "500");
+
+      const res = await fetch(`/api/domains/filtered?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch more domains");
+      const json = (await res.json()) as { domains: Domain[] };
+
+      if (json.domains && json.domains.length > 0) {
+        setServerDomains((prev) => [...prev, ...json.domains]);
+      } else {
+        setLoadedAllDomains(true);
+      }
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Failed to load more");
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  // Fetch more domains when approaching end of loaded domains
+  useEffect(() => {
+    const domainsNeededForPage = currentPage * PAGE_SIZE;
+    const loadBuffer = 100; // Load more when we're within 100 items of the end
+    if (
+      domainsNeededForPage + loadBuffer > serverDomains.length &&
+      !loadedAllDomains
+    ) {
+      fetchMoreDomains();
+    }
+  }, [currentPage, serverDomains.length, loadedAllDomains]);
 
   useEffect(() => {
     // Build a stable query string based on the supported server filters.
@@ -165,8 +232,8 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       setServerDomains(initialDomains);
       setFetchError(null);
       setIsFetching(false);
-      setVisibleCount(PAGE_SIZE);
-      setLoadMoreOffset(0);
+      setCurrentPage(1);
+      setLoadedAllDomains(false);
       return;
     }
 
@@ -183,8 +250,8 @@ export default function DomainsExplorer({ initialDomains }: Props) {
         }
         const json = (await res.json()) as { domains: Domain[] };
         setServerDomains(json.domains ?? []);
-        setVisibleCount(PAGE_SIZE);
-        setLoadMoreOffset(0);
+        setCurrentPage(1);
+        setLoadedAllDomains(false);
       } catch (err) {
         setFetchError(err instanceof Error ? err.message : "Fetch failed");
       } finally {
@@ -205,8 +272,7 @@ export default function DomainsExplorer({ initialDomains }: Props) {
       <FilterBar
         activeQuickFilters={activeQuickFilters}
         onToggleQuickFilter={(key) => {
-          setVisibleCount(PAGE_SIZE);
-          setLoadMoreOffset(0);
+          setCurrentPage(1);
           setActiveQuickFilters((prev) => {
             if (prev.includes(key)) return prev.filter((k) => k !== key);
             return [...prev, key];
@@ -214,14 +280,12 @@ export default function DomainsExplorer({ initialDomains }: Props) {
         }}
         advancedFilters={advancedFilters}
         onApplyAdvancedFilters={(next) => {
-          setVisibleCount(PAGE_SIZE);
-          setLoadMoreOffset(0);
+          setCurrentPage(1);
           setAdvancedFilters(next);
         }}
         sortBy={sortBy}
         onChangeSortBy={(next) => {
-          setVisibleCount(PAGE_SIZE);
-          setLoadMoreOffset(0);
+          setCurrentPage(1);
           setSortBy(next);
         }}
         resultCount={sorted.length}
@@ -237,82 +301,108 @@ export default function DomainsExplorer({ initialDomains }: Props) {
             {fetchError}
           </div>
         ) : (
-          <>
-            <DomainTable domains={visibleDomains} />
-            {sorted.length > 0 && canLoadMore && (
-              <div className="flex justify-center border-t border-zinc-200 px-4 py-4">
-                <button
-                  type="button"
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    // Blur any focused input to prevent mobile keyboard from opening
-                    const activeElement = document.activeElement as HTMLElement;
-                    if (activeElement && "blur" in activeElement) {
-                      activeElement.blur();
-                    }
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                  }}
-                  onClick={async () => {
-                    // Blur any focused input
-                    const activeElement = document.activeElement as HTMLElement;
-                    if (activeElement && "blur" in activeElement) {
-                      activeElement.blur();
-                    }
-                    
-                    // Check if we need to fetch more from server
-                    const newVisibleCount = Math.min(visibleCount + PAGE_SIZE, sorted.length);
-                    if (newVisibleCount >= sorted.length && sorted.length === serverDomains.length) {
-                      // Fetch more domains from server
-                      setIsFetching(true);
-                      try {
-                        const params = new URLSearchParams();
-                        if (serverFilters.tlds && serverFilters.tlds.length > 0) {
-                          params.set("tlds", serverFilters.tlds.join(","));
-                        }
-                        if (serverFilters.noNumbers) params.set("no_numbers", "1");
-                        if (serverFilters.noHyphens) params.set("no_hyphens", "1");
-                        if (serverFilters.lengthMin !== undefined)
-                          params.set("length_min", String(serverFilters.lengthMin));
-                        if (serverFilters.lengthMax !== undefined)
-                          params.set("length_max", String(serverFilters.lengthMax));
-                        if (serverFilters.startsWith)
-                          params.set("starts_with", serverFilters.startsWith);
-                        if (serverFilters.endsWith)
-                          params.set("ends_with", serverFilters.endsWith);
-                        
-                        const newOffset = loadMoreOffset + 500;
-                        params.set("offset", String(newOffset));
-                        params.set("limit", "500");
-                        
-                        const res = await fetch(`/api/domains/filtered?${params.toString()}`);
-                        if (!res.ok) throw new Error("Failed to fetch more domains");
-                        const json = (await res.json()) as { domains: Domain[] };
-                        
-                        if (json.domains && json.domains.length > 0) {
-                          setServerDomains((prev) => [...prev, ...json.domains]);
-                          setLoadMoreOffset(newOffset);
-                        }
-                      } catch (err) {
-                        setFetchError(err instanceof Error ? err.message : "Failed to load more");
-                      } finally {
-                        setIsFetching(false);
-                      }
-                    }
-                    
-                    setVisibleCount((n) => Math.min(n + PAGE_SIZE, sorted.length));
-                  }}
-                  disabled={isFetching}
-                  className="select-none h-10 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isFetching ? "Loading..." : "Load more"}
-                </button>
-              </div>
-            )}
-          </>
+          <DomainTable domains={visibleDomains} />
         )}
       </div>
+
+      {sorted.length > 0 && (
+        <div className="mt-4 flex flex-col items-center justify-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1 || isFetching}
+              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+
+            <div className="flex items-center gap-1">
+              {totalPages <= 7 ? (
+                // Show all pages if 7 or fewer
+                Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-10 w-10 rounded-md text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
+                          : "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )
+              ) : (
+                // Show smart pagination for many pages
+                <>
+                  {currentPage > 3 && (
+                    <>
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        className="h-10 w-10 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                      >
+                        1
+                      </button>
+                      {currentPage > 4 && (
+                        <span className="px-2 text-zinc-600">...</span>
+                      )}
+                    </>
+                  )}
+
+                  {Array.from(
+                    { length: 5 },
+                    (_, i) => currentPage - 2 + i
+                  )
+                    .filter((p) => p > 0 && p <= totalPages)
+                    .map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-10 w-10 rounded-md text-sm font-medium transition-colors ${
+                          currentPage === page
+                            ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
+                            : "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && (
+                        <span className="px-2 text-zinc-600">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="h-10 w-10 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages || isFetching}
+              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+
+          <div className="text-xs text-zinc-600">
+            Page {currentPage} of {totalPages} ({sorted.length} results)
+          </div>
+        </div>
+      )}
     </>
   );
 }
